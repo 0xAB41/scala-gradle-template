@@ -1,0 +1,51 @@
+apply plugin: 'scala'
+
+description = "{project description}"
+version = "{version}"
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+sourceCompatibility = '1.8'
+
+ext {
+    versions = [
+        _scala: '2.12',
+        scala: '2.12.3',
+        scala_test: '3.0.4',
+        junit: '4.12'
+    ]
+}
+
+dependencies {
+    compile "org.scala-lang:scala-library:${versions.scala}"
+    compile "org.scala-lang:scala-compiler:${versions.scala}"
+    testCompile "junit:junit:${versions.junit}"
+    testCompile "org.scalatest:scalatest_${versions._scala}:${versions.scala_test}"
+
+}
+
+compileScala {
+  scalaCompileOptions.additionalParameters = ['-feature', '-language:implicitConversions', '-Xlint']
+
+  //refer: https://discuss.gradle.org/t/idea-integration-with-scala-plugin-broken-since-gradle-3-0-no-such-property-daemonserver/19159
+  ScalaCompileOptions.metaClass.daemonServer = true
+  ScalaCompileOptions.metaClass.fork = true
+  ScalaCompileOptions.metaClass.useAnt = false
+  ScalaCompileOptions.metaClass.useCompileDaemon = false
+}
+
+task wrapper(description: "Generates gradle wrapper",type: Wrapper) {
+    gradleVersion '3.1'
+}
+
+// The default task 'test' does not run ScalaTests, rather only JUnit tests.
+task runTests(description: "runs all ScalaTests", dependsOn: ['testClasses'], type: JavaExec) {
+  main = 'org.scalatest.tools.Runner'
+  args = ['-R', 'build/classes/test', '-o']
+  classpath = sourceSets.test.runtimeClasspath
+}
+
+defaultTasks = ['build', 'runTests', 'run']
